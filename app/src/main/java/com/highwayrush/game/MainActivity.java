@@ -26,7 +26,6 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        enterImmersiveMode();
 
         webView = new WebView(this);
         webView.setBackgroundColor(Color.rgb(12, 16, 36));
@@ -65,6 +64,9 @@ public class MainActivity extends Activity {
         });
 
         setContentView(webView);
+
+        webView.post(this::enterImmersiveMode);
+        
         webView.loadUrl("file:///android_asset/index.html");
     }
 
