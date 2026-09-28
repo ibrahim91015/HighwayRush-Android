@@ -1,0 +1,47 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.highwayrush.game'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.highwayrush.game'
+        minSdk 24
+        targetSdk 35
+        versionCode 1
+        versionName '1.0-mobile'
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+
+// Keep the APK self-contained: download the pinned Three.js runtime at build time.
+def threeJsFile = file('src/main/assets/js/vendor/three.min.js')
+tasks.register('downloadThreeJs') {
+    outputs.file(threeJsFile)
+    doLast {
+        if (!threeJsFile.exists() || threeJsFile.length() == 0) {
+            threeJsFile.parentFile.mkdirs()
+            def url = new URI('https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js').toURL()
+            url.withInputStream { input ->
+                threeJsFile.withOutputStream { output -> output << input }
+            }
+            if (threeJsFile.length() < 100000) {
+                throw new GradleException('Three.js download was incomplete.')
+            }
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn('downloadThreeJs') }

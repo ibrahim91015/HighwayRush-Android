@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0c1024">
+<title>Highway Rush</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="crash-flash"></div>
+<div id="death-vignette"></div>
+<div id="warn-oncoming">ONCOMING</div>
+
+<!-- ===== HUD ===== -->
+<div id="hud" class="hidden">
+  <div class="hud-col">
+    <div class="hud-box hud-left">
+      <div class="hud-label">LEVEL</div>
+      <div id="hud-level" class="hud-big">1</div>
+      <div id="hud-lanes" class="hud-sub">6 LANES</div>
+    </div>
+    <div id="hud-legend">
+      <div><b>W / &#8593;</b> thrust &nbsp; <b>S / &#8595;</b> brake</div>
+      <div><b>A / &#8592;</b> left &nbsp; <b>D / &#8594;</b> right</div>
+      <div><b>SPACE</b> handbrake &nbsp; <b>C</b> camera</div>
+      <div><b>WHEEL</b> zoom &nbsp; <b>M</b> sound</div>
+    </div>
+  </div>
+  <div class="hud-box hud-center">
+    <div class="hud-label">LEVEL DISTANCE</div>
+    <div id="hud-miles" class="hud-miles">0.00 / 0.50 mi</div>
+    <div class="progress-track"><div id="hud-milesbar" class="progress-fill"></div></div>
+  </div>
+  <div class="hud-box hud-right">
+    <div class="hud-row"><span class="hud-label">TOTAL</span><span id="hud-total" class="hud-val">0.00 mi</span></div>
+    <div class="hud-row"><span class="hud-label">SPEED</span><span id="hud-speed" class="hud-val">0 mph</span></div>
+    <div class="hud-row"><span class="hud-label">TIME</span><span id="hud-time" class="hud-val">0:00</span></div>
+    <div class="hud-row"><span class="hud-label">TOP</span><span id="hud-top" class="hud-val">0 mph</span></div>
+  </div>
+</div>
+
+<!-- ===== Banners ===== -->
+<div id="banner" class="hidden"><span id="banner-text">LEVEL 2</span></div>
+
+<!-- ===== START SCREEN ===== -->
+<div id="start-screen" class="overlay">
+  <div class="panel">
+    <h1 class="title">HIGHWAY <span>RUSH</span></h1>
+    <p class="tagline">Outrun the traffic. Don't touch a thing.</p>
+    <div class="howto keyboard-howto">
+      <div><b>&#8592; / A</b> &nbsp;steer left</div>
+      <div><b>&#8594; / D</b> &nbsp;steer right</div>
+      <div><b>&#8593; / W</b> &nbsp;accelerate</div>
+      <div><b>&#8595; / S</b> &nbsp;brake</div>
+      <div><b>SPACE</b> &nbsp;handbrake (hard stop)</div>
+      <div><b>C</b> &nbsp;camera view (chase / top-down / hood)</div>
+      <div><b>WHEEL</b> &nbsp;zoom the camera</div>
+      <div><b>M</b> &nbsp;mute / unmute</div>
+    </div>
+    <div class="mobile-howto">
+      <b>TOUCH CONTROLS</b> &nbsp; Steer on the left. Gas, brake and handbrake are on the right.
+    </div>
+    <div class="rules">
+      <p>&#9873; Drive the required miles to clear each level.</p>
+      <p>&#9873; The highway is two-way with no median &mdash; oncoming traffic fills the left lanes. You can cut across, but the double yellow line is the only thing between you.</p>
+      <p>&#9873; Every level adds more cars at higher speeds &mdash; and the road widens from 6 lanes up to 10 on super-hard levels.</p>
+      <p>&#9873; Crash and you drop back 2 levels. One run, one life&hellip; or keep going.</p>
+    </div>
+    <p id="start-best" class="best-run hidden"></p>
+    <button id="btn-start" class="btn btn-primary">START ENGINE</button>
+  </div>
+</div>
+
+<!-- ===== CRASH / LEADERBOARD SCREEN ===== -->
+<div id="crash-screen" class="overlay hidden">
+  <div class="panel panel-wide">
+    <h1 class="title title-crash">WRECKED<span id="highscore-badge" class="badge hidden">&#9733; NEW HIGH SCORE &#9733;</span></h1>
+    <div class="stats">
+      <div class="stat"><span class="stat-val" id="stat-miles">0.00</span><span class="stat-label">miles driven</span></div>
+      <div class="stat"><span class="stat-val" id="stat-level">1</span><span class="stat-label">level reached</span></div>
+      <div class="stat"><span class="stat-val" id="stat-top">0</span><span class="stat-label">top speed (mph)</span></div>
+      <div class="stat"><span class="stat-val" id="stat-time">0:00</span><span class="stat-label">time survived</span></div>
+    </div>
+    <div class="lb-wrap">
+      <h2 class="lb-title">LEADERBOARD</h2>
+      <input id="lb-name" type="text" maxlength="14" placeholder="ENTER YOUR NAME" autocomplete="off">
+      <ol id="lb-list" class="lb-list"></ol>
+    </div>
+    <div class="btn-row">
+      <button id="btn-keep" class="btn btn-primary">KEEP GOING <small>(back 2 levels)</small></button>
+      <button id="btn-reset" class="btn btn-ghost">RESET <small>(start over)</small></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MOBILE TOUCH CONTROLS ===== -->
+<div id="touch-controls" aria-label="Driving controls">
+  <div class="touch-cluster touch-steering" aria-label="Steering">
+    <button type="button" class="touch-btn touch-steer" data-hold="left" aria-label="Steer left">&#9664;</button>
+    <button type="button" class="touch-btn touch-steer" data-hold="right" aria-label="Steer right">&#9654;</button>
+  </div>
+  <div class="touch-utility" aria-label="Game options">
+    <button type="button" class="touch-btn touch-small" data-tap="camera" aria-label="Change camera"><span class="touch-icon">CAM</span><span class="touch-action-label">VIEW</span></button>
+    <button type="button" class="touch-btn touch-small" data-tap="mute" aria-label="Mute sound"><span class="touch-icon">&#9835;</span><span class="touch-action-label">SOUND</span></button>
+  </div>
+  <div class="touch-cluster touch-pedals" aria-label="Pedals">
+    <button type="button" class="touch-btn touch-secondary" data-hold="handbrake" aria-label="Handbrake"><span class="touch-pedal-label">HB</span><small>HANDBRAKE</small></button>
+    <button type="button" class="touch-btn touch-secondary" data-hold="brake" aria-label="Brake"><span class="touch-pedal-label">&#9660;</span><small>BRAKE</small></button>
+    <button type="button" class="touch-btn touch-primary" data-hold="gas" aria-label="Accelerate"><span class="touch-pedal-label">&#9650;</span><small>GAS</small></button>
+  </div>
+</div>
+
+<div id="rotate-device" role="status">
+  <div class="rotate-card">
+    <div class="rotate-phone" aria-hidden="true">&#9645;</div>
+    <b>Rotate your phone</b>
+    <span>Highway Rush plays in landscape.</span>
+  </div>
+</div>
+
+<script src="js/vendor/three.min.js"></script>
+<script src="js/config.js"></script>
+<script src="js/merge.js"></script>
+<script src="js/vehicles.js"></script>
+<script src="js/road.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/traffic.js"></script>
+<script src="js/player.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/game.js"></script>
+<script src="js/mobile.js"></script>
+</body>
+</html>
